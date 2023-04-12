@@ -1,0 +1,22 @@
+poly_path=~/FYP_Team25/FYP/MOD_4/CODE_TRANSFORMED_CODE
+if [ -z "$1" ] 
+then
+	echo "no arguments"
+	exit 0
+fi
+
+num=$2
+bp=$(echo "BP_RES_$1")
+r20=$(echo "$(echo $num)_RUN_RESULT_ATTACK_$1")
+avg=0
+
+for (( c=1; c<=$num; c++ ))
+do
+	./attack 2 512 163840 4096 & $poly_path/$1/$1 1 > $bp
+	bp_res=$(cat $bp)
+	avg=$(echo "$avg+$bp_res" | bc -l)
+done
+avg=$(echo "$avg / $num" | bc -l)
+avg=$(echo "$avg / 1000.0" | bc -l)
+echo "$(echo $num) run average of single-run of beneign kernel: $avg" >> $r20
+

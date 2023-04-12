@@ -154,7 +154,7 @@ __global__ void mvt_kernel2(DATA_TYPE *a, DATA_TYPE *x2, DATA_TYPE *y_2,
   __shared__ int bid[1];
   __shared__ int miss_num[1];
   if (!runable_retreat(bid, miss_num, con))
-    return;
+	  return;
 
   int i = bid[0] * blockDim.x + threadIdx.x;
 
@@ -246,8 +246,10 @@ void mvtCuda(DATA_TYPE *a, DATA_TYPE *x1, DATA_TYPE *x2, DATA_TYPE *y_1,
   task_destroy(task1);
   task_destroy(task2);
   //==============================
-  fprintf(stdout, "time_in_frame_app_%d: %0.6lfms\n", app_id,
+  fprintf(stdout, "%0.6lf\n", 
           (t_end - t_start) * 1000);
+  //fprintf(stdout, "time_in_frame_app_%d: %0.6lfms\n", app_id,
+  //        (t_end - t_start) * 1000);
   cudaMemcpy(x1_outputFromGpu, x1_gpu, sizeof(DATA_TYPE) * N,
              cudaMemcpyDeviceToHost);
   cudaMemcpy(x2_outputFromGpu, x2_gpu, sizeof(DATA_TYPE) * N,
@@ -262,8 +264,8 @@ void mvtCuda(DATA_TYPE *a, DATA_TYPE *x1, DATA_TYPE *x2, DATA_TYPE *y_1,
 
 int main(int argc, char **argv)
 {
-  printf("start mvt...\n");
-  GPU_argv_init();
+  //printf("start mvt...\n");
+  //GPU_argv_init();
   int app_id = atoi(argv[1]);
   double t_start, t_end;
   DATA_TYPE *a;
@@ -290,7 +292,7 @@ int main(int argc, char **argv)
   runMvt(a, x1, x2, y_1, y_2);
 
   t_end = rtclock();
-  fprintf(stdout, "CPU Runtime: %0.6lfs\n", t_end - t_start);
+  //fprintf(stdout, "CPU Runtime: %0.6lfs\n", t_end - t_start);
 
   compareResults(x1, x1_outputFromGpu, x2, x2_outputFromGpu);
 

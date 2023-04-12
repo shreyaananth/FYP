@@ -80,10 +80,10 @@ void compareResults(DATA_TYPE *s, DATA_TYPE *s_outputFromGpu, DATA_TYPE *q,
   }
 
   // print results
-  printf(
-      "Non-Matching CPU-GPU Outputs Beyond Error Threshold of %4.2f Percent: "
-      "%d\n",
-      PERCENT_DIFF_ERROR_THRESHOLD, fail);
+  //printf(
+  //    "Non-Matching CPU-GPU Outputs Beyond Error Threshold of %4.2f Percent: "
+  //    "%d\n",
+  //    PERCENT_DIFF_ERROR_THRESHOLD, fail);
 }
 
 // Distributed (split) from initial loop and permuted into reverse order to
@@ -189,7 +189,7 @@ void bicgCuda(DATA_TYPE *A, DATA_TYPE *r, DATA_TYPE *s, DATA_TYPE *p,
   t_start = rtclock();
   if (flag)
   {
-    kernel_splitting_send(app_id);
+    //kernel_splitting_send(app_id);
     bicg_kernel1<<<task1.block_num, block>>>(A_gpu, r_gpu, s_gpu, task1);
   }
   else
@@ -205,10 +205,10 @@ void bicgCuda(DATA_TYPE *A, DATA_TYPE *r, DATA_TYPE *s, DATA_TYPE *p,
     task2 = dispatcher(app, grid2, block);
     auto stream1 = getStream();
     auto stream2 = getStream();
-    kernel_splitting_send(app_id);
+    //kernel_splitting_send(app_id);
     bicg_kernel1<<<task1_1.block_num, block, 0, stream1>>>(A_gpu, r_gpu, s_gpu,
                                                            task1_1);
-    kernel_splitting_receive(app_id);
+    //kernel_splitting_receive(app_id);
     bicg_kernel1<<<task1_2.block_num, block, 0, stream2>>>(A_gpu, r_gpu, s_gpu,
                                                            task1_2);
     cudaStreamSynchronize(stream1);
@@ -221,11 +221,12 @@ void bicgCuda(DATA_TYPE *A, DATA_TYPE *r, DATA_TYPE *s, DATA_TYPE *p,
   gpuErrchk(cudaPeekAtLastError());
   gpuErrchk(cudaDeviceSynchronize());
   t_end = rtclock();
-  if (flag)
-    kernel_splitting_receive(app_id);
+  
   task_destroy(task1);
   task_destroy(task2);
-  fprintf(stdout, "time_in_frame_app_%d: %0.6lfms\n", app_id,
+  //fprintf(stdout, "time_in_frame_app_%d: %0.6lfms\n", app_id,
+  //        (t_end - t_start) * 1000);
+  fprintf(stdout, "%0.6lf\n",
           (t_end - t_start) * 1000);
   cudaMemcpy(s_outputFromGpu, s_gpu, sizeof(DATA_TYPE) * NY,
              cudaMemcpyDeviceToHost);
@@ -241,9 +242,9 @@ void bicgCuda(DATA_TYPE *A, DATA_TYPE *r, DATA_TYPE *s, DATA_TYPE *p,
 
 int main(int argc, char **argv)
 {
-  printf("start bicg...\n");
+  //printf("start bicg...\n");
   double t_start, t_end;
-  GPU_argv_init();
+  //GPU_argv_init();
   int app_id = atoi(argv[1]);
   DATA_TYPE *A;
   DATA_TYPE *r;
@@ -270,7 +271,7 @@ int main(int argc, char **argv)
   bicg_cpu(A, r, s, p, q);
   t_end = rtclock();
 
-  fprintf(stdout, "CPU Runtime: %0.6lfs\n", t_end - t_start);
+  //fprintf(stdout, "CPU Runtime: %0.6lfs\n", t_end - t_start);
 
   compareResults(s, s_outputFromGpu, q, q_outputFromGpu);
 

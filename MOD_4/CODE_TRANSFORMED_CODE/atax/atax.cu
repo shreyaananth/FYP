@@ -64,10 +64,10 @@ void compareResults(DATA_TYPE *z, DATA_TYPE *z_outputFromGpu)
   }
 
   // print results
-  printf(
-      "Non-Matching CPU-GPU Outputs Beyond Error Threshold of %4.2f Percent: "
-      "%d\n",
-      PERCENT_DIFF_ERROR_THRESHOLD, fail);
+  //printf(
+  //    "Non-Matching CPU-GPU Outputs Beyond Error Threshold of %4.2f Percent: "
+  //    "%d\n",
+  //    PERCENT_DIFF_ERROR_THRESHOLD, fail);
 }
 
 __global__ void atax_kernel1(DATA_TYPE *A, DATA_TYPE *x, DATA_TYPE *tmp,
@@ -166,7 +166,6 @@ void ataxGpu(DATA_TYPE *A, DATA_TYPE *x, DATA_TYPE *y, DATA_TYPE *tmp,
   t_start = rtclock();
   if (flag)
   {
-    kernel_splitting_send(app_id);
     atax_kernel1<<<task1.block_num, block>>>(A_gpu, x_gpu, tmp_gpu, task1);
   }
   else
@@ -182,10 +181,10 @@ void ataxGpu(DATA_TYPE *A, DATA_TYPE *x, DATA_TYPE *y, DATA_TYPE *tmp,
     task2 = dispatcher(app, grid2, block);
     auto stream1 = getStream();
     auto stream2 = getStream();
-    kernel_splitting_send(app_id);
+    //kernel_splitting_send(app_id);
     atax_kernel1<<<task1_1.block_num, block, 0, stream1>>>(A_gpu, x_gpu,
                                                            tmp_gpu, task1_1);
-    kernel_splitting_receive(app_id);
+    //kernel_splitting_receive(app_id);
     atax_kernel1<<<task1_2.block_num, block, 0, stream2>>>(A_gpu, x_gpu,
                                                            tmp_gpu, task1_2);
     cudaStreamSynchronize(stream1);
@@ -197,12 +196,12 @@ void ataxGpu(DATA_TYPE *A, DATA_TYPE *x, DATA_TYPE *y, DATA_TYPE *tmp,
   cudaPeekAtLastError();
   cudaDeviceSynchronize();
   t_end = rtclock();
-  if (flag)
-    kernel_splitting_receive(app_id);
   task_destroy(task1);
   task_destroy(task2);
   //============================================
-  fprintf(stdout, "time_in_frame_app_%d: %0.6lfms\n", app_id,
+  //fprintf(stdout, "time_in_frame_app_%d: %0.6lfms\n", app_id,
+  //        (t_end - t_start) * 1000);
+  fprintf(stdout, "%0.6lf\n", 
           (t_end - t_start) * 1000);
   cudaMemcpy(y_outputFromGpu, y_gpu, sizeof(DATA_TYPE) * NX,
              cudaMemcpyDeviceToHost);
@@ -215,7 +214,7 @@ void ataxGpu(DATA_TYPE *A, DATA_TYPE *x, DATA_TYPE *y, DATA_TYPE *tmp,
 
 int main(int argc, char **argv)
 {
-  printf("start atax...\n");
+  //printf("start atax...\n");
   // GPU_argv_init();
   double t_start, t_end;
   int app_id = atoi(argv[1]);
@@ -238,7 +237,7 @@ int main(int argc, char **argv)
   t_start = rtclock();
   atax_cpu(A, x, y, tmp);
   t_end = rtclock();
-  fprintf(stdout, "CPU Runtime: %0.6lfs\n", t_end - t_start);
+  //fprintf(stdout, "CPU Runtime: %0.6lfs\n", t_end - t_start);
 
   compareResults(y, y_outputFromGpu);
 

@@ -89,10 +89,10 @@ void compareResults(DATA_TYPE *G, DATA_TYPE *G_outputFromGpu)
   }
 
   // print results
-  printf(
-      "Non-Matching CPU-GPU Outputs Beyond Error Threshold of %4.2f Percent: "
-      "%d\n",
-      PERCENT_DIFF_ERROR_THRESHOLD, fail);
+  //printf(
+  //    "Non-Matching CPU-GPU Outputs Beyond Error Threshold of %4.2f Percent: "
+  //    "%d\n",
+   //   PERCENT_DIFF_ERROR_THRESHOLD, fail);
 }
 
 __global__ void mm3_kernel1(DATA_TYPE *A, DATA_TYPE *B, DATA_TYPE *E,
@@ -248,14 +248,20 @@ void mm3Cuda(DATA_TYPE *A, DATA_TYPE *B, DATA_TYPE *C, DATA_TYPE *D,
   Policy task2 = dispatcher(app, grid2, block);
   Policy task3 = dispatcher(app, grid3, block);
  
-
+ double t_start, t_end;
+  t_start = rtclock();
   
-   kernel_splitting_send(app_id);
+   //kernel_splitting_send(app_id);
   mm3_kernel1<<<task1.block_num, block>>>(A_gpu, B_gpu, E_gpu, task1);
   mm3_kernel2<<<task2.block_num, block>>>(C_gpu, D_gpu, F_gpu, task2);
   mm3_kernel3<<<task3.block_num, block>>>(E_gpu, F_gpu, G_gpu, task3);
   
-    kernel_splitting_receive(app_id);
+    //kernel_splitting_receive(app_id);
+
+  t_end = rtclock();
+  
+   fprintf(stdout, "%0.6lf\n", 
+          (t_end - t_start) * 1000);
 
   gpuErrchk(cudaPeekAtLastError());
   gpuErrchk(cudaDeviceSynchronize());
@@ -264,7 +270,6 @@ void mm3Cuda(DATA_TYPE *A, DATA_TYPE *B, DATA_TYPE *C, DATA_TYPE *D,
   task_destroy(task2);
   task_destroy(task3);
   
-  printf("tasks destroyed\n");
   
   cudaMemcpy(G_outputFromGpu, G_gpu, sizeof(DATA_TYPE) * NI * NL,
              cudaMemcpyDeviceToHost);
@@ -280,7 +285,6 @@ void mm3Cuda(DATA_TYPE *A, DATA_TYPE *B, DATA_TYPE *C, DATA_TYPE *D,
 
 int main(int argc, char **argv)
 {
-  printf("start 3mm...\n");
   int app_id = atoi(argv[1]);
   double t_start, t_end;
   DATA_TYPE *A;
@@ -311,7 +315,7 @@ int main(int argc, char **argv)
 
   t_end = rtclock();
 
-  fprintf(stdout, "CPU Runtime: %0.6lfs\n", t_end - t_start);
+  //fprintf(stdout, "CPU Runtime: %0.6lfs\n", t_end - t_start);
 
   compareResults(G, G_outputFromGpu);
 

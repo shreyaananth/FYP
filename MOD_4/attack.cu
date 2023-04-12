@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "runtime.cuh"
 #include <stdint.h>
 #include <iostream>
 #include <fstream>
@@ -53,8 +54,14 @@ void add_diff(unsigned int *a, unsigned int *b)
 	}
 	printf("add1=%p,add2=%p,address diff =%0.2f MB\n", a, b, (double)((unsigned long)b - (unsigned long)a) / 1024 / 1024);
 }
-__global__ void tlb2_attack2(unsigned int **my_array, int steps, int *compiler_array, int memNum)
+__global__ void tlb2_attack2(unsigned int **my_array, int steps, int *compiler_array, int memNum, Policy con)
 {
+
+  __shared__ int bidx[1];
+  __shared__ int bidy[1];
+  __shared__ int miss_num[1];
+  if (!runable_retreat(bidx, bidy, miss_num, con))
+    return;
 
 	int k;
 	unsigned int j = 0;
@@ -75,7 +82,7 @@ __global__ void tlb2_attack2(unsigned int **my_array, int steps, int *compiler_a
 	compiler_array[blockDim.x * blockIdx.x + threadIdx.x + 2] = compile;
 }
 
-void tlb2_attack(int attack_tlbsize, int attack_stride)
+void tlb2_attack(int attack_tlbsize, int attack_stride, const int &app_id)
 {
 	unsigned int devNo = 0;
 	cudaSetDevice(devNo);
@@ -111,12 +118,22 @@ void tlb2_attack(int attack_tlbsize, int attack_stride)
 	cudaMemset(compiler_array, 0, sizeof(int) * SMcount * threadnum * 3);
 	double t1, t2;
 	fprintf(stderr, "attack_tlbsize=%d,attack_stride=%d,steps=%d,threadnum=%d\n", attack_tlbsize, attack_stride, steps, threadnum);
+
+
+App app(app_id);
+  
+dim3 grid(SMcount, 1, 1);
+    dim3 block(threadnum, 1, 1);
+
+  Policy task1 = dispatcher(app, grid, block);
+
 	t1 = GetMSTime();
 
-	tlb2_attack2<<<SMcount, threadnum>>>(d_arr, steps, compiler_array, memNum);
+	tlb2_attack2<<<grid, block>>>(d_arr, steps, compiler_array, memNum, task1);
 
 	cudaDeviceSynchronize();
 	t2 = GetMSTime();
+  task_destroy(task1);
 
 	fprintf(stderr, "GPU-concatenation-time: %4.2lf ms\n", (t2 - t1));
 	for (int i = 0; i < memNum; i++)
@@ -128,13 +145,14 @@ void tlb2_attack(int attack_tlbsize, int attack_stride)
 
 int main(int argc, char **argv)
 {
-	if(argc==4){
+	if(argc==5){
 
-		threadnum = atoi(argv[1]);
-		steps = atoi(argv[2]);
-		evict_tlb_size = atoi(argv[3]);
-		
+		threadnum = atoi(argv[2]);
+		steps = atoi(argv[3]);
+		evict_tlb_size = atoi(argv[4]);
+
 	}
-	tlb2_attack(evict_tlb_size, 32);
+	int app_id = atoi(argv[1]);
+	tlb2_attack(evict_tlb_size, 32, app_id);
 	return 0;
 }
