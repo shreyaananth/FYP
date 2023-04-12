@@ -20,9 +20,9 @@ done
 avg=$(echo "$avg / 20.0" | bc -l)
 echo "20 run average of single-run of beneign kernel: $avg" >> $r20
 
-for threads in {256..512..4}
+for threads in {512..512..4}
 do
-	for evict_tlb_size in {2048..8192..256}
+	for evict_tlb_size in {4096..8192..256}
 	do
 		filename=$(echo "MAL_RESULTS__$1__$(echo $threads)__$evict_tlb_size")
 		echo "THREAD_COUNT EVICT_TLB_SIZE STEPS EXEC_TIME_20_RUNS NTT" >> $filename
